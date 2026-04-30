@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+{% block title %}| Estoque{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div>
+      <h2 class="gs-page-title mb-1"><i class="bi bi-grid-fill me-2 gs-accent"></i>Controle de Estoque</h2>
+      <p class="text-muted mb-0">{{ alertas.total }} produto(s) cadastrado(s)</p>
+    </div>
+    <a href="{{ url_for('produtos.novo') }}" class="btn gs-btn-primary">
+      <i class="bi bi-plus-lg me-2"></i>Novo Produto
+    </a>
+  </div>
+
+  <!-- Cards de alertas -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="gs-stat-card">
+        <div class="gs-stat-icon bg-primary bg-opacity-10 text-primary">
+          <i class="bi bi-boxes"></i>
+        </div>
+        <div>
+          <div class="gs-stat-number">{{ alertas.total }}</div>
+          <div class="gs-stat-label">Total de Produtos</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="gs-stat-card">
+        <div class="gs-stat-icon bg-warning bg-opacity-10 text-warning">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <div>
+          <div class="gs-stat-number">{{ alertas.estoque_baixo }}</div>
+          <div class="gs-stat-label">Estoque Baixo</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="gs-stat-card">
+        <div class="gs-stat-icon bg-orange bg-opacity-10 text-orange">
+          <i class="bi bi-clock-history"></i>
+        </div>
+        <div>
+          <div class="gs-stat-number">{{ alertas.vencendo }}</div>
+          <div class="gs-stat-label">Vencendo em Breve</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="gs-stat-card">
+        <div class="gs-stat-icon bg-danger bg-opacity-10 text-danger">
+          <i class="bi bi-x-circle-fill"></i>
+        </div>
+        <div>
+          <div class="gs-stat-number">{{ alertas.vencidos }}</div>
+          <div class="gs-stat-label">Vencidos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabela de produtos -->
+  <div class="gs-card">
+    <div class="gs-card-header d-flex align-items-center justify-content-between">
+      <span><i class="bi bi-table me-2"></i>Produtos</span>
+      <!-- Campo de busca -->
+      <input type="text" id="buscaProduto" class="form-control gs-input w-auto"
+             placeholder="🔍 Buscar produto..." style="max-width: 240px;"/>
+    </div>
+
+    <div class="table-responsive">
+      {% if produtos %}
+      <table class="table gs-table mb-0" id="tabelaProdutos">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nome</th>
+            <th>Quantidade</th>
+            <th>Vencimento</th>
+            <th>Status</th>
+            <th class="text-end">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in produtos %}
+          <tr class="
+            {% if p.vencido %}gs-row-danger
+            {% elif p.vencimento_proximo or p.estoque_baixo %}gs-row-warning
+            {% endif %}
+          ">
+            <td class="text-muted">{{ p.id }}</td>
+            <td class="fw-semibold">{{ p.nome }}</td>
+
+            <!-- Quantidade com badge -->
+            <td>
+              {% if p.estoque_baixo %}
+                <span class="gs-badge gs-badge-warning">
+                  <i class="bi bi-exclamation-circle me-1"></i>{{ p.quantidade }} un
+                </span>
+              {% else %}
+                <span class="gs-badge gs-badge-success">{{ p.quantidade }} un</span>
+              {% endif %}
+            </td>
+
+            <!-- Data de vencimento -->
+            <td>
+              {% if p.data_vencimento %}
+                {% if p.vencido %}
+                  <span class="text-danger fw-semibold">
+                    <i class="bi bi-x-circle me-1"></i>{{ p.data_vencimento }}
+                  </span>
+                {% elif p.vencimento_proximo %}
+                  <span class="text-warning fw-semibold">
+                    <i class="bi bi-clock me-1"></i>{{ p.data_vencimento }}
+                  </span>
+                {% else %}
+                  <span class="text-muted">{{ p.data_vencimento }}</span>
+                {% endif %}
+              {% else %}
+                <span class="text-muted fst-italic">—</span>
+              {% endif %}
+            </td>
+
+            <!-- Status badges -->
+            <td>
+              <div class="d-flex flex-wrap gap-1">
+                {% if p.vencido %}
+                  <span class="gs-badge gs-badge-danger"><i class="bi bi-x-circle me-1"></i>Vencido</span>
+                {% elif p.vencimento_proximo %}
+                  <span class="gs-badge gs-badge-warning"><i class="bi bi-clock me-1"></i>Vencendo</span>
+                {% endif %}
+                {% if p.estoque_baixo %}
+                  <span class="gs-badge gs-badge-warning"><i class="bi bi-exclamation-triangle me-1"></i>Baixo</span>
+                {% endif %}
+                {% if not p.vencido and not p.vencimento_proximo and not p.estoque_baixo %}
+                  <span class="gs-badge gs-badge-success"><i class="bi bi-check-circle me-1"></i>OK</span>
+                {% endif %}
+              </div>
+            </td>
+
+            <!-- Ações -->
+            <td class="text-end">
+              <div class="d-flex justify-content-end gap-2">
+                <a href="{{ url_for('produtos.editar', id=p.id) }}"
+                   class="btn btn-sm gs-btn-edit" title="Editar">
+                  <i class="bi bi-pencil-fill"></i>
+                </a>
+                <!-- Botão de excluir abre modal de confirmação -->
+                <button type="button" class="btn btn-sm gs-btn-delete"
+                        data-bs-toggle="modal" data-bs-target="#modalExcluir"
+                        data-id="{{ p.id }}" data-nome="{{ p.nome }}"
+                        title="Excluir">
+                  <i class="bi bi-trash3-fill"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% else %}
+      <!-- Estado vazio -->
+      <div class="gs-empty-state">
+        <i class="bi bi-inbox gs-empty-icon"></i>
+        <h5>Nenhum produto cadastrado</h5>
+        <p class="text-muted">Comece adicionando seu primeiro produto ao estoque.</p>
+        <a href="{{ url_for('produtos.novo') }}" class="btn gs-btn-primary">
+          <i class="bi bi-plus-lg me-2"></i>Adicionar Produto
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Legenda -->
+  {% if produtos %}
+  <div class="d-flex flex-wrap gap-3 mt-3 text-muted small">
+    <span><span class="gs-legend gs-legend-danger"></span> Vencido</span>
+    <span><span class="gs-legend gs-legend-warning"></span> Vencendo em breve ou estoque baixo</span>
+    <span><span class="gs-legend gs-legend-success"></span> Normal</span>
+    <span class="ms-auto">Estoque baixo: ≤ 5 unidades | Vencendo: próximos 7 dias</span>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Modal de confirmação de exclusão -->
+<div class="modal fade" id="modalExcluir" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content gs-modal">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">
+          <i class="bi bi-trash3-fill text-danger me-2"></i>Confirmar Exclusão
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Tem certeza que deseja excluir o produto <strong id="nomeExcluir"></strong>?</p>
+        <p class="text-muted small mb-0">Esta ação não pode ser desfeita.</p>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <form id="formExcluir" method="POST" action="">
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash3-fill me-2"></i>Excluir
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Configura o modal de exclusão com os dados do produto
+  document.getElementById("modalExcluir").addEventListener("show.bs.modal", function (event) {
+    const btn = event.relatedTarget;
+    const id = btn.getAttribute("data-id");
+    const nome = btn.getAttribute("data-nome");
+
+    document.getElementById("nomeExcluir").textContent = `"${nome}"`;
+    document.getElementById("formExcluir").action = `/excluir/${id}`;
+  });
+
+  // Busca em tempo real na tabela
+  document.getElementById("buscaProduto").addEventListener("input", function () {
+    const termo = this.value.toLowerCase();
+    const linhas = document.querySelectorAll("#tabelaProdutos tbody tr");
+    linhas.forEach(function (linha) {
+      const nome = linha.querySelector("td:nth-child(2)").textContent.toLowerCase();
+      linha.style.display = nome.includes(termo) ? "" : "none";
+    });
+  });
+</script>
+{% endblock %}
