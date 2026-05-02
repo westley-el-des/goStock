@@ -40,7 +40,7 @@ class Produto:
         """
         Retorna todos os produtos com flags de alerta:
         - estoque_baixo: True se quantidade <= limite
-        - vencimento_proximo: True se vence nos próximos 7 dias
+        - vencimento_proximo: True se vence nos próximos 30 dias
         - vencido: True se a data de vencimento já passou
         """
         conn = get_connection()

@@ -53,7 +53,7 @@
               </div>
               <div class="form-text text-muted">
                 <i class="bi bi-info-circle me-1"></i>
-                Estoque baixo é sinalizado quando a quantidade for ≤ 5 unidades.
+                Estoque baixo é sinalizado quando a quantidade for ≤ 10 unidades.
               </div>
               <div class="invalid-feedback">Informe uma quantidade válida.</div>
             </div>
@@ -68,7 +68,7 @@
                      value="{{ produto.data_vencimento if produto else '' }}"/>
               <div class="form-text text-muted">
                 <i class="bi bi-calendar-event me-1"></i>
-                Produtos vencendo nos próximos 7 dias serão sinalizados.
+                Produtos vencendo nos próximos 30 dias serão sinalizados.
               </div>
             </div>
 
