@@ -20,6 +20,8 @@ class Produto:
         self.quantidade = quantidade
         self.data_vencimento = data_vencimento
 
+        
+
     @staticmethod
     def criar_tabela():
         """Cria a tabela de produtos se não existir."""
@@ -29,7 +31,8 @@ class Produto:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 nome TEXT NOT NULL,
                 quantidade INTEGER NOT NULL DEFAULT 0,
-                data_vencimento DATE
+                data_vencimento DATE,
+                usuario_id INTEGER NOT NULL
             )
         """)
         conn.commit()
@@ -86,12 +89,12 @@ class Produto:
         return dict(produto) if produto else None
 
     @staticmethod
-    def cadastrar(nome, quantidade, data_vencimento):
+    def cadastrar(nome, quantidade, data_vencimento, usuario_id):
         """Insere um novo produto no banco de dados."""
         conn = get_connection()
         conn.execute(
-            "INSERT INTO produtos (nome, quantidade, data_vencimento) VALUES (?, ?, ?)",
-            (nome, quantidade, data_vencimento or None)
+            "INSERT INTO produtos (nome, quantidade, data_vencimento, usuario_id) VALUES (?, ?, ?, ?)",
+            (nome, quantidade, data_vencimento or None, usuario_id)
         )
         conn.commit()
         conn.close()
@@ -116,15 +119,56 @@ class Produto:
         conn.close()
 
     @staticmethod
-    def contar_alertas():
+    def contar_alertas(usuario_id):
         """Retorna contagem de alertas para o dashboard."""
-        produtos = Produto.listar_todos()
+        produtos = Produto.listar_por_usuario(usuario_id)
+
         estoque_baixo = sum(1 for p in produtos if p["estoque_baixo"])
         vencendo = sum(1 for p in produtos if p["vencimento_proximo"])
         vencidos = sum(1 for p in produtos if p["vencido"])
+
         return {
             "estoque_baixo": estoque_baixo,
             "vencendo": vencendo,
             "vencidos": vencidos,
             "total": len(produtos)
         }
+    
+    @staticmethod
+    def listar_por_usuario(usuario_id):
+        conn = get_connection()
+        cursor = conn.execute(
+            "SELECT * FROM produtos WHERE usuario_id = ? ORDER BY nome ASC",
+            (usuario_id,)
+        )
+        produtos = cursor.fetchall()
+        conn.close()
+
+        from datetime import date, timedelta
+
+        hoje = date.today()
+        limite_vencimento = hoje + timedelta(days=30)
+        resultado = []
+
+        for p in produtos:
+            produto = dict(p)
+
+            #estoque baixo
+            produto["estoque_baixo"] = produto["quantidade"] <= 10
+
+            #vencimento
+            if produto["data_vencimento"]:
+                if isinstance(produto["data_vencimento"], str):
+                    venc = date.fromisoformat(produto["data_vencimento"])
+                else:
+                    venc = produto["data_vencimento"]
+
+                produto["vencido"] = venc < hoje
+                produto["vencimento_proximo"] = hoje <= venc <= limite_vencimento
+            else:
+                produto["vencido"] = False
+                produto["vencimento_proximo"] = False
+
+            resultado.append(produto)
+
+        return resultado 

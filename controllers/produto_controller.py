@@ -27,8 +27,11 @@ def login_required(f):
 @login_required
 def listar():
     """Lista todos os produtos com alertas de estoque e vencimento."""
-    produtos = Produto.listar_todos()
-    alertas = Produto.contar_alertas()
+    usuario_id = session["usuario_id"]
+    produtos = Produto.listar_por_usuario(usuario_id)
+    usuario_id = session["usuario_id"]
+    alertas = Produto.contar_alertas(usuario_id)
+
     return render_template("produtos/listar.html", produtos=produtos, alertas=alertas)
 
 
@@ -51,7 +54,15 @@ def novo():
             return render_template("produtos/form.html", acao="Cadastrar", produto=None)
 
         # Cadastra o produto
-        Produto.cadastrar(nome, int(quantidade), data_vencimento or None)
+        usuario_id = session["usuario_id"]
+
+        Produto.cadastrar(
+            nome, 
+            int(quantidade),
+            data_vencimento or None, 
+            usuario_id
+        )
+        
         flash(f'Produto "{nome}" cadastrado com sucesso! ✅', "success")
         return redirect(url_for("produtos.listar"))
 
