@@ -3,6 +3,7 @@
 
 import os
 from flask import Flask, redirect, url_for
+from models.database import inicializar_banco
 from controllers.auth_controller import auth_bp
 from controllers.produto_controller import produtos_bp
 
@@ -31,6 +32,11 @@ def create_app():
 
 # App para o Gunicorn (Render)
 app = create_app()
+
+
+# 🔥 cria tabelas no Render (1x no startup)
+with app.app_context():
+    inicializar_banco()
 
 
 if __name__ == "__main__":
