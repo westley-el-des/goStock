@@ -27,3 +27,9 @@ app = create_app()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
+from models.usuario import Usuario
+from models.produto import Produto
+
+Usuario.criar_tabela()
+Produto.criar_tabela()
