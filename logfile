@@ -1,0 +1,2 @@
+2026-05-30 14:05:22.871 -03 [72514] FATAL:  arquivo de bloqueio "postmaster.pid" já existe
+2026-05-30 14:05:22.871 -03 [72514] DICA:  Outro postmaster (PID 72403) está executando sob o diretório de dados "/usr/local/var/postgresql@18"?
