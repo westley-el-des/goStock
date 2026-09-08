@@ -137,9 +137,15 @@ class Produto:
         cursor = conn.cursor(cursor_factory=RealDictCursor)
 
         cursor.execute("""
-            SELECT * FROM produtos
-            WHERE usuario_id = %s
-            ORDER BY nome ASC
+            SELECT 
+            id,
+            nome,
+            quantidade,
+            data_vencimento::tet AS data_vencimento,
+            usuario_id
+        FROM produtos
+        WHERE usuario_id = %s
+        ORDER BY nome ASC
         """, (usuario_id,))
 
         produtos = cursor.fetchall()
