@@ -163,15 +163,27 @@ class Produto:
 
             if produto["data_vencimento"]:
                 venc = produto["data_vencimento"]
-                if isinstance(venc, str):
-                    venc = date.fromisoformat(venc)
 
-                produto["vencido"] = venc < hoje
-                produto["vencimento_proximo"] = hoje <= venc <= limite_vencimento
-            else:
-                produto["vencido"] = False
+                if isinstance(venc, str):
+
+                    try:
+                        venc = date.fromisoformat(venc)
+                    except (ValueError, TypeError):
+                        venc = None
+
+                if venc is not None:
+                     produto["vencido"] = venc < hoje
+                     produto["vencimento_proximo"] = hoje <= venc <= limite_vencimento
+
+                else:
+                     produto["vencido"] = False 
+                     produto["vencimento_proximo"] = False
+
+            else:  
+                produto["vencido"] = False 
                 produto["vencimento_proximo"] = False
 
             resultado.append(produto)
+
 
         return resultado
