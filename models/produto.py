@@ -141,7 +141,7 @@ class Produto:
             id,
             nome,
             quantidade,
-            data_vencimento::tet AS data_vencimento,
+            data_vencimento::text AS data_vencimento,
             usuario_id
         FROM produtos
         WHERE usuario_id = %s
