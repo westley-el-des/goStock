@@ -74,7 +74,17 @@ class Produto:
         conn = get_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-        cursor.execute("SELECT * FROM produtos WHERE id = %s", (id,))
+        cursor.execute("""
+            SELECT
+                id,
+                nome,
+                quantidade,
+                data_vencimento::text AS data_vencimento,
+                usuario_id
+            FROM produtos
+            WHERE id = %s
+        """, (id,))
+
         produto = cursor.fetchone()
 
         conn.close()
