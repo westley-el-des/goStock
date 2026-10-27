@@ -4,10 +4,19 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from models.produto import Produto
 from functools import wraps
+from datetime import datetime, date
 
 # Blueprint para agrupar as rotas de produtos
 produtos_bp = Blueprint("produtos", __name__)
 
+def converter_data(data_texto):
+    if not data_texto:
+        return None
+
+    try:
+        return datetime.strptime(data_texto, "%d/%m/%Y").date()
+    except ValueError:
+        raise ValueError("Formato de data inválido. Use DD/MM/AAAA.")
 
 def login_required(f):
     """
@@ -42,7 +51,14 @@ def novo():
     if request.method == "POST":
         nome = request.form.get("nome", "").strip()
         quantidade = request.form.get("quantidade", "").strip()
-        data_vencimento = request.form.get("data_vencimento", "").strip()
+        data_texto = request.form.get("data_vencimento", "").strip()
+
+        try:
+            data_vencimento = converter_data(data_texto)
+        except ValueError as erro:
+            flash(str(erro), "danger")
+            return render_template("produtos/form.html", acao="Cadastrar", produto=None
+            )
 
         # Validações
         if not nome:
@@ -74,6 +90,9 @@ def novo():
 def editar(id):
     """Exibe formulário pré-preenchido e processa a edição de um produto."""
     produto = Produto.buscar_por_id(id)
+    if produto and produto["data_vencimento"]:
+        data = date.fromisoformat(produto["data_vencimento"])
+        produto["data_vencimento"] = data.strftime("%d/%m/%Y")
 
     if not produto:
         flash("Produto não encontrado.", "danger")
@@ -82,7 +101,14 @@ def editar(id):
     if request.method == "POST":
         nome = request.form.get("nome", "").strip()
         quantidade = request.form.get("quantidade", "").strip()
-        data_vencimento = request.form.get("data_vencimento", "").strip()
+        data_texto = request.form.get("data_vencimento", "").strip()
+
+        try:
+            data_vencimento = converter_data(data_texto)
+        except ValueError as erro:
+            flash(str(erro), "danger")
+            return render_template("produtos/form.html", acao="Editar", produto=produto
+            )
 
         # Validações
         if not nome:
